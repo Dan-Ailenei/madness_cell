@@ -1,3 +1,4 @@
+import os
 import sys
 from random import randint
 from time import sleep
@@ -65,7 +66,8 @@ class StartWindow(QWidget):
         new_game.show()
 
     def load_genes(self):
-        config = read_from_file('/Users/dan.ailenei/myprojects/Semester-6/Stratec/data/Step_One.csv')
+        dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config = read_from_file(os.path.join(dir, 'data', 'Step_One.csv'))
         solver = GeneticSolver.from_config(config, generations=100, population_size=100)
         game = MainWindow(matrix=config)
         self.game_windows.append(game)
@@ -195,9 +197,7 @@ class FileDialog(QWidget):
 
 
 if __name__ == '__main__':
-    filepath = '..\\2020_Internship_Challenge_Software\\Step_Two-Z.csv'
     app = QApplication(sys.argv)
-
     startWindow = StartWindow()
     startWindow.show()
 
