@@ -1,14 +1,17 @@
 import sys
-import threading
 from random import randint
 from time import sleep
 
-from PyQt5.QtCore import Qt, QRunnable, pyqtSlot, QThreadPool
+from PyQt5.QtCore import Qt, QRunnable, pyqtSlot, QThreadPool, pyqtSignal, QObject
 from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTableWidget, QTableWidgetItem, \
     QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog
 from genetic import GeneticSolver
 from utils import read_from_file
+
+
+class WorkerSignals(QObject):
+    result = pyqtSignal(object)
 
 
 class StartWindow(QWidget):
@@ -63,26 +66,25 @@ class StartWindow(QWidget):
 
     def load_genes(self):
         config = read_from_file('/Users/dan.ailenei/myprojects/Semester-6/Stratec/data/Step_One.csv')
-        solver = GeneticSolver.from_config(config, generations=100, population_size=5)
-
-        # for individual in solver.population.individuals:
-        #     matrix = individual.genes.to_matrix()
-        #     new_game = MainWindow(matrix=matrix)
-        #     self.game_windows.append(new_game)
-        #     new_game.show()
-
+        solver = GeneticSolver.from_config(config, generations=100, population_size=100)
         game = MainWindow(matrix=config)
         self.game_windows.append(game)
         game.show()
 
         class Worker(QRunnable):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.signals = WorkerSignals()
+
             @pyqtSlot()
             def run(self):
-                for i in range(1000):
-                    sleep(2)
-                    game.table_widget.new_matrix_button.click()
-        self.threadpool.start(Worker())
+                for indvidual in solver.population.individuals:
+                    sleep(1)
+                    self.signals.result.emit(indvidual.genes.to_matrix())
 
+        worker = Worker()
+        worker.signals.result.connect(game.table_widget.initUI)
+        self.threadpool.start(worker)
 
 
 class MainWindow(QWidget):
@@ -127,8 +129,6 @@ class TableWidget(QWidget):
         super(TableWidget, self).__init__()
         self.matrix = matrix
         self.table = None
-        self.new_matrix_button = QPushButton(text='Dumnezeu cu mila')
-        self.new_matrix_button.clicked.connect(lambda x: self.initUI([[1,2,3], [1,2,3]]))
 
         self.grid = QGridLayout()
         self.setLayout(self.grid)
