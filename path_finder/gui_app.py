@@ -74,17 +74,18 @@ class StartWindow(QWidget):
         game.show()
 
         class Worker(QRunnable):
-            def __init__(self, *args, **kwargs):
+            def __init__(self, solver, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 self.signals = WorkerSignals()
+                self.solver = solver
 
             @pyqtSlot()
             def run(self):
-                for indvidual in solver.population.individuals:
+                for indvidual in self.solver.population.individuals:
                     sleep(1)
                     self.signals.result.emit(indvidual.genes.to_matrix())
 
-        worker = Worker()
+        worker = Worker(solver)
         worker.signals.result.connect(game.table_widget.initUI)
         self.threadpool.start(worker)
 
@@ -110,9 +111,9 @@ class MainWindow(QWidget):
             self.layout.addWidget(label)
 
         # save button
-        self.save_configuration_button = QPushButton(text='Save configuration as csv')
-        self.save_configuration_button.clicked.connect(self.save_configuration_button_clicked)
-        self.layout.addWidget(self.save_configuration_button)
+        # self.save_configuration_button = QPushButton(text='Save configuration as csv')
+        # self.save_configuration_button.clicked.connect(self.save_configuration_button_clicked)
+        # self.layout.addWidget(self.save_configuration_button)
 
         self.setLayout(self.layout)
 
@@ -121,7 +122,7 @@ class MainWindow(QWidget):
         select_file_widget.save_file_dialog()
         select_file_widget.show()
         if select_file_widget.selected_filename:
-            self.table_widget.playground.save_to_csv(select_file_widget.selected_filename)
+            pass
 
 
 class TableWidget(QWidget):

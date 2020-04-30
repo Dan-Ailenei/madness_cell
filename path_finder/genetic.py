@@ -17,7 +17,7 @@ class GeneticSolver:
         solver.config = config
         # unique numbers in config
         number_of_paths = int(max(sum(config, [])))
-        start_coords = solver._get_start_coords(config, number_of_paths)
+        start_coords = solver._get_start_coords(config)
         size = (len(config), len(config[0]))
         labeled_sparse_matrix = LabeledSparseMatrix(number_of_paths, size, start_coords)
 
@@ -27,7 +27,7 @@ class GeneticSolver:
         )
         return solver
 
-    def _get_start_coords(self, config, number_of_paths):
+    def _get_start_coords(self, config):
         return {
             (i, j): int(cell)
             for i, line in enumerate(config)

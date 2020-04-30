@@ -9,7 +9,7 @@ class LabeledSparseMatrix:
         self.size = size
         self.data = {}
 
-    def _get_start_coords(self, config, number_of_paths):
+    def _get_start_coords(self, config):
         return {
             (i, j): int(cell)
             for i, line in enumerate(config)
