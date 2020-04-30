@@ -2,7 +2,7 @@ import random
 from itertools import product
 from random import randint
 
-from ds import LabeledSparseMatrix
+from ds import LabeledSparseMatrix, Genes
 from utils import read_from_file
 
 
@@ -14,16 +14,15 @@ class GeneticSolver:
     @classmethod
     def from_config(cls, config, **kwargs):
         solver = cls(**kwargs)
-        solver.config = config
-        # unique numbers in config
         number_of_paths = int(max(sum(config, [])))
         start_coords = solver._get_start_coords(config)
         size = (len(config), len(config[0]))
-        labeled_sparse_matrix = LabeledSparseMatrix(number_of_paths, size, start_coords)
+        labeled_sparse_matrix = LabeledSparseMatrix(number_of_paths, size)
 
         solver.population = Population.initialized_population(
             solver.population_size,
-            labeled_sparse_matrix
+            labeled_sparse_matrix,
+            start_coords
         )
         return solver
 
@@ -86,31 +85,37 @@ class Population:
         self.size_turnir = size // 5
 
     @classmethod
-    def initialized_population(cls, size, labeled_sparse_matrix):
+    def initialized_population(cls, size, labeled_sparse_matrix, start_coords):
         population = cls(size)
-        population.initialize(size, labeled_sparse_matrix)
+        population.initialize(size, labeled_sparse_matrix, start_coords)
         return population
 
-    def initialize(self, size, labeled_sparse_matrix):
+    def initialize(self, size, labeled_sparse_matrix, start_coords):
         k, l = labeled_sparse_matrix.size
         unique_numbers = range(1, labeled_sparse_matrix.number_of_paths + 1)
-        initial_points = set(labeled_sparse_matrix.start_coords)
+        initial_points = set(start_coords)
         number_of_current_cells = len(initial_points)
         cells_to_initialize = (k * l - number_of_current_cells) // 2
         cells_to_initialize_for_each_path = cells_to_initialize // number_of_current_cells
 
+        items_to_coords = Genes.item_to_coord_start_coords(start_coords)
+
         for _ in range(size):
             wrong_generated_cell = 0
-            points_to_alocate = {(i, j) for i in range(k) for j in range(l)} - initial_points
-            genes = labeled_sparse_matrix.copy()
+            genes = Genes(labeled_sparse_matrix.copy(), start_coords)
 
             for number in unique_numbers:
+                current_number_pins = items_to_coords[number]
+                random_start = current_number_pins[randint(0, len(current_number_pins) - 1)]
+                current_path = [random_start]
+                genes.paths.append(current_path)
+
                 for __ in range(cells_to_initialize_for_each_path):
-                    indexes = random.sample(points_to_alocate, 1)[0]
-                    # am gasit 2 numere la fel una langa altu, pe diagonala, afla dc
+                    neighbours = self._index_neighbours(*current_path[-1])
+
+                    indexes = random.sample(neighbours, 1)[0]
                     if indexes not in genes and self._space_condition(genes, indexes, number):
-                        points_to_alocate.remove(indexes)
-                        genes.data[indexes] = number
+                        genes[indexes] = number
                     else:
                         wrong_generated_cell += 1
 
