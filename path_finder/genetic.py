@@ -126,7 +126,7 @@ class Population:
                         wrong_generated_cell += 1
 
             self.individuals.append(Individual(genes))
-            print(f'There were {wrong_generated_cell} wrong generated cells, population size: {self.size}')
+            # print(f'There were {wrong_generated_cell} wrong generated cells, population size: {self.size}')
 
     def _space_condition(self, genes, indexes, number):
         return all(neighbour not in genes or genes[neighbour] == number for neighbour in self._index_neighbours(*indexes))

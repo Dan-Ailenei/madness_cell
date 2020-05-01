@@ -15,7 +15,3 @@ def get_random_color(item):
         item,
         '#%02X%02X%02X' % (randint(50, 125), randint(50, 125), randint(50, 125))
     )
-
-
-async def get_random_color_async():
-    return '#%02X%02X%02X' % (randint(50, 125), randint(50, 125), randint(50, 125))
