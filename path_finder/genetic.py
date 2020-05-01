@@ -1,3 +1,4 @@
+import asyncio
 import random
 from itertools import product
 from random import randint
@@ -89,6 +90,11 @@ class Population:
         population = cls(size)
         population.initialize(size, labeled_sparse_matrix, start_coords)
         return population
+
+    async def async_individuals_generator(self):
+        for individual in self.individuals:
+            yield individual
+            await asyncio.sleep(0.001)
 
     def initialize(self, size, labeled_sparse_matrix, start_coords):
         k, l = labeled_sparse_matrix.size
