@@ -1,5 +1,6 @@
 import csv
 from random import randint
+import math
 
 colors = {}
 
@@ -15,3 +16,10 @@ def get_random_color(item):
         item,
         '#%02X%02X%02X' % (randint(50, 125), randint(50, 125), randint(50, 125))
     )
+
+
+def distance(x, y):
+    # don t compute the actual full distance
+    x1, y1 = x
+    x2, y2 = y
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)

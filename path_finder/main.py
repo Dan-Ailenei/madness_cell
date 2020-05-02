@@ -10,14 +10,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WINDOWS = 6
 
 
-async def load_genes(window):
+async def block_queue(window):
     while True:
-        event, values = window.read(timeout=1)
-        if event in (None, 'Exit'):
-            break
-        if event != '__TIMEOUT__':
-            print(f'[{event}] [{values}]')
-        await asyncio.sleep(0.0001)
+        # apparently this function renders the changes
+        window.read(timeout=0)
+        await asyncio.sleep(0.1)
 
 
 async def receive_signals(window, proc, key):
@@ -56,7 +53,8 @@ async def main():
         )
         coroutines.append(receive_signals(window, proc, i))
 
-    await asyncio.wait([load_genes(window)] + coroutines)
+    await asyncio.wait([block_queue(window)] + coroutines)
+    window.close()
 
 
 if __name__ == '__main__':

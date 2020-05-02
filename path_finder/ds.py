@@ -1,6 +1,7 @@
 import copy
-import csv
 from collections import defaultdict
+
+from cached_property import cached_property
 
 
 class LabeledSparseMatrix:
@@ -16,29 +17,53 @@ class LabeledSparseMatrix:
 
 
 class Genes:
-    def __init__(self, labeled_sparse_matrix, start_coords):
-        self.paths = []
-        self.start_coords = start_coords
+    # read only
+    start_points = None
+    item_to_points = None
+
+    def __init__(self, labeled_sparse_matrix):
+        self.paths = defaultdict(list)
         self.labeled_sparse_matrix = labeled_sparse_matrix
 
     def __contains__(self, key):
-        return key in self.labeled_sparse_matrix.data or key in self.start_coords
+        return key in self.labeled_sparse_matrix.data or key in self.start_points
 
     def __getitem__(self, key):
         if key in self.labeled_sparse_matrix.data:
             return self.labeled_sparse_matrix.data[key]
-        return self.start_coords[key]
+        return self.start_points[key]
 
-    def __setitem__(self, indexes, number):
-        self.labeled_sparse_matrix.data[indexes] = number
-        self.paths[number - 1].append(indexes)
+    def __setitem__(self, point, number):
+        self.labeled_sparse_matrix.data[point] = number
+
+    def delete_old_path(self, key):
+        if key in self.paths:
+            del self.paths[key]
+
+    @cached_property
+    def get_first_points_in_paths(self):
+        return {path[0] for path in self.paths}
 
     @classmethod
-    def item_to_coord_start_coords(cls, start_coords):
+    def set_start_points(cls, config):
+        cls.start_points = cls.__get_start_points(config)
+        cls.item_to_points = cls.__item_to_coord_start_coords()
+
+    @classmethod
+    def __item_to_coord_start_coords(cls):
         rez = defaultdict(list)
-        for coord, num in start_coords.items():
+        for coord, num in cls.start_points.items():
             rez[num].append(coord)
         return rez
+
+    @classmethod
+    def __get_start_points(cls, config):
+        return {
+            (i, j): int(cell)
+            for i, line in enumerate(config)
+            for j, cell in enumerate(line)
+            if cell != '0'
+        }
 
     def copy(self):
         instance = copy.copy(self)
@@ -55,14 +80,21 @@ class Genes:
             for j in range(l):
                 if (i, j) in self.labeled_sparse_matrix.data:
                     current_list.append(self.labeled_sparse_matrix.data[(i, j)])
-                elif (i, j) in self.start_coords:
-                    current_list.append(self.start_coords[(i, j)])
+                elif (i, j) in self.start_points:
+                    current_list.append(self.start_points[(i, j)])
                 else:
                     current_list.append(0)
         return rez
 
-    def write_to_file(self):
-        with open('/Users/dan.ailenei/myprojects/Semester-6/Stratec/data/genes.csv', 'w') as f:
-            writer = csv.writer(f, delimiter=',')
-            for row in self.to_matrix():
-                writer.writerow(row)
+    def print_matrix(self, bad_points):
+        matrix = self.to_matrix()
+        print("-" * len(matrix[0]))
+        for i, line in enumerate(matrix):
+            rez = ''
+            for j, e in enumerate(line):
+                if (i, j) in bad_points:
+                    rez += 'X, '
+                else:
+                    rez += f'{e}, '
+            print(rez[:-2])
+        print("-" * len(matrix[0]))

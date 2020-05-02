@@ -1,1 +1,2 @@
 pysimplegui==4.18.2
+cached-property==1.5.1
